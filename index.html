@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Value Momentum Desk</title>
+<style>
+:root{
+  --bg:#0b0f14;--panel:#121821;--panel2:#18212c;--line:#253141;--text:#e6edf3;--mute:#8b98a8;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--cyan:#06b6d4;--violet:#a78bfa;--accent:#22c55e;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:17px;margin:0;letter-spacing:.3px;margin-right:auto}
+header h1 span{color:var(--accent)}
+.pill{padding:3px 10px;border-radius:99px;font-size:12px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.pill.ok{color:var(--green);border-color:#1f5f3a}.pill.bad{color:var(--red);border-color:#6b2323}.pill.run{color:var(--amber);border-color:#6b4d12}
+main{padding:12px 16px 40px;max-width:1500px;margin:0 auto}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:12px}
+summary{cursor:pointer;padding:11px 14px;font-weight:600;user-select:none}
+.body{padding:4px 14px 14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+input,select,button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+input[type=number]{width:80px}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+button{cursor:pointer;font-weight:600}
+button:hover{border-color:var(--mute)}
+button.go{background:#14532d;border-color:#1f7a44}
+button:disabled{opacity:.45;cursor:not-allowed}
+.help{color:var(--mute);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.grp{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px}
+.grp h4{margin:0 0 8px;font-size:13px;color:var(--accent)}
+.it{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:5px 0;font-size:13px}
+#meta{font-size:12px;color:var(--mute);margin:4px 0 8px}
+#status{font-size:13px;color:var(--mute);min-height:18px}
+#status.err{color:var(--red)}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;min-width:100px;flex:1}
+.stat b{display:block;font-size:19px}.stat span{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.5px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tab{background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:13px;cursor:pointer;color:var(--mute)}
+.tab.on{color:var(--text);border-color:var(--accent);background:#10241a}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:right}
+th{position:sticky;top:0;background:var(--panel2);cursor:pointer;font-size:12px;color:var(--mute);user-select:none}
+th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--panel2)}
+.pos{color:var(--green)}.neg{color:var(--red)}.mut{color:var(--mute)}
+.chk{display:inline-flex;gap:3px}
+.chk i{font-style:normal;font-size:10px;padding:1px 4px;border-radius:4px;background:#2a1414;color:#f87171}
+.chk i.y{background:#0f2e1b;color:#4ade80}.chk i.n{background:#1c232d;color:#5b6676}
+.score{display:inline-block;min-width:34px;text-align:center;border-radius:5px;padding:1px 5px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:12px;z-index:9}
+.modal.on{display:flex}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(980px,100%);max-height:94vh;overflow:auto;padding:14px}
+.card h3{margin:0 0 4px}
+canvas{width:100%;height:400px;display:block;background:var(--bg);border-radius:8px;margin:10px 0}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:6px}
+.kv div{background:var(--panel2);border-radius:7px;padding:6px 9px;font-size:12px;color:var(--mute)}
+.kv b{display:block;color:var(--text);font-size:14px}
+a{color:var(--cyan)}
+.legend{font-size:12px;color:var(--mute);display:flex;gap:12px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:3px;vertical-align:middle;margin-right:4px}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute);margin:6px 0}
+label.f input{width:100%}
+@media (max-width:700px){ .hs{display:none} canvas{height:320px} main{padding:10px 10px 30px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Value <span>×</span> Momentum Desk</h1>
+  <span id="runPill" class="pill">scan: —</span>
+  <button id="runBtn" class="go">▶ Run scan now</button>
+  <button id="ghBtn" title="GitHub settings">⚙</button>
+</header>
+<main>
+<div id="meta">Loading latest scan…</div>
+
+<details id="rulesBox">
+  <summary>Rules (applied instantly to the latest scan)</summary>
+  <div class="body"><div id="rules" class="grid"></div>
+  <p class="help">Indicator periods are fixed in the scan (shown at the bottom). Everything here filters live in your browser.</p></div>
+</details>
+
+<div class="row">
+  <input id="search" placeholder="Search symbol / name / industry" style="flex:1;min-width:180px">
+  <button id="reload" title="Reload latest results">↻</button>
+  <button id="exportBtn">⇩ CSV</button>
+</div>
+<div id="status"></div>
+
+<div class="stats">
+  <div class="stat"><span>Universe</span><b id="sUni">0</b></div>
+  <div class="stat"><span>Value pass</span><b id="sVal">0</b></div>
+  <div class="stat"><span>Full match</span><b id="sFull" class="pos">0</b></div>
+  <div class="stat"><span>Near-miss</span><b id="sNear">0</b></div>
+</div>
+
+<div class="tabs" id="tabs">
+  <span class="tab on" data-v="full">Full matches</span>
+  <span class="tab" data-v="near">Near-miss</span>
+  <span class="tab" data-v="value">Value passers</span>
+  <span class="tab" data-v="trend">Fresh Supertrend</span>
+  <span class="tab" data-v="all">All</span>
+</div>
+<div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+<p class="help">Checks: <b>Ind</b> P/E ≤ industry median − x% · <b>Hist</b> P/E ≤ historical avg − x% · <b>Up</b> close &gt; fast EMA &gt; slow EMA, fast EMA rising · <b>ST</b> Supertrend turned bullish within N bars · <b>ADX</b> above min and rising, +DI &gt; −DI · <b>Mom</b> RSI in band and ROC above min · <b>Vol</b> volume vs 20-day avg (optional). <b>SL%</b> = distance to the Supertrend line. Tap a row for the chart.</p>
+<p class="help" id="cfgLine"></p>
+</main>
+
+<div id="modal" class="modal"><div class="card">
+  <div class="row" style="justify-content:space-between;margin:0">
+    <div><h3 id="mTitle"></h3><div id="mSub" class="help"></div></div>
+    <button data-close>✕</button>
+  </div>
+  <canvas id="chart"></canvas>
+  <div class="legend">
+    <span><i style="background:var(--amber)"></i>Fast EMA</span>
+    <span><i style="background:var(--blue)"></i>Slow EMA</span>
+    <span><i style="background:var(--green)"></i><i style="background:var(--red)"></i>Supertrend</span>
+    <span><i style="background:var(--violet)"></i>ADX</span>
+    <span><i style="background:var(--green)"></i>+DI</span>
+    <span><i style="background:var(--red)"></i>−DI</span>
+  </div>
+  <div id="mKv" class="kv" style="margin-top:10px"></div>
+  <div class="row" id="mLinks"></div>
+</div></div>
+
+<div id="ghModal" class="modal"><div class="card" style="width:min(520px,100%)">
+  <div class="row" style="justify-content:space-between;margin:0"><h3>Run-scan settings</h3><button data-close>✕</button></div>
+  <p class="help">Results load automatically. To start a scan from this page, add a fine-grained GitHub token with <b>Actions: Read and write</b> on this repository only. It's stored only in this browser.</p>
+  <label class="f">Owner<input id="ghOwner"></label>
+  <label class="f">Repository<input id="ghRepo"></label>
+  <label class="f">Branch<input id="ghBranch" placeholder="main"></label>
+  <label class="f">Workflow file<input id="ghWf" placeholder="scan.yml"></label>
+  <label class="f">GitHub token<input id="ghPat" type="password" placeholder="github_pat_…"></label>
+  <div class="row"><button id="ghSave" class="go">Save</button></div>
+</div></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+const fx = (v, d = 2) => v == null || !isFinite(v) ? '—' : (+v).toFixed(d);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function status(msg, err){ const el = $('#status'); el.textContent = msg || ''; el.className = err ? 'err' : ''; }
+
+async function getJSON(url, ms = 30000){
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), ms);
+  try {
+    const r = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store', signal: ac.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(to); }
+}
+
+/* ---------------- rules ---------------- */
+const RULES = [
+  { g: 'Valuation', items: [
+    { id: 'useInd', t: 'chk', l: 'P/E below industry median', d: true },
+    { id: 'indDisc', l: '…by at least %', d: 20 },
+    { id: 'useHist', t: 'chk', l: 'P/E below historical avg', d: true },
+    { id: 'histDisc', l: '…by at least %', d: 20 },
+    { id: 'reqHist', t: 'chk', l: 'Fail if no hist P/E', d: true },
+    { id: 'peMax', l: 'Max P/E', d: 60 },
+    { id: 'minMcap', l: 'Min market cap ₹Cr', d: 500 },
+  ]},
+  { g: 'Uptrend', items: [
+    { id: 'useUp', t: 'chk', l: 'Enabled', d: true },
+    { id: 'reqStack', t: 'chk', l: 'Require fast EMA > slow EMA', d: true },
+  ]},
+  { g: 'Supertrend start', items: [
+    { id: 'useST', t: 'chk', l: 'Enabled', d: true },
+    { id: 'flipBars', l: 'Bull flip within last N bars', d: 5 },
+  ]},
+  { g: 'ADX growing', items: [
+    { id: 'useADX', t: 'chk', l: 'Enabled', d: true },
+    { id: 'adxMin', l: 'Min ADX', d: 20 },
+    { id: 'reqDI', t: 'chk', l: 'Require +DI > −DI', d: true },
+  ]},
+  { g: 'Momentum', items: [
+    { id: 'useMom', t: 'chk', l: 'Enabled', d: true },
+    { id: 'rsiMin', l: 'RSI min', d: 55 },
+    { id: 'rsiMax', l: 'RSI max', d: 75 },
+    { id: 'rocMin', l: 'Min ROC %', d: 3, step: 0.5 },
+  ]},
+  { g: 'Extras', items: [
+    { id: 'useVol', t: 'chk', l: 'Volume surge check', d: false },
+    { id: 'volMin', l: 'Volume ≥ × 20-day avg', d: 1.5, step: 0.1 },
+    { id: 'nearMin', l: 'Near-miss: min checks passed', d: 5 },
+  ]},
+];
+function buildRules(){
+  const saved = LS.get('vmd_rules', {});
+  $('#rules').innerHTML = RULES.map(g => `<div class="grp"><h4>${g.g}</h4>${g.items.map(it => {
+    const v = saved[it.id] !== undefined ? saved[it.id] : it.d;
+    const ctl = it.t === 'chk' ? `<input type="checkbox" id="r_${it.id}" ${v ? 'checked' : ''}>`
+      : `<input type="number" id="r_${it.id}" value="${v}" step="${it.step || 1}">`;
+    return `<div class="it"><span>${it.l}</span>${ctl}</div>`;
+  }).join('')}</div>`).join('');
+  $('#rules').addEventListener('input', () => { LS.set('vmd_rules', readP()); evaluate(); render(); });
+}
+function readP(){
+  const P = {};
+  RULES.forEach(g => g.items.forEach(it => {
+    const el = $('#r_' + it.id);
+    P[it.id] = it.t === 'chk' ? el.checked : (isFinite(parseFloat(el.value)) ? parseFloat(el.value) : it.d);
+  }));
+  return P;
+}
+
+/* ---------------- evaluation ---------------- */
+const S = { data: null, charts: null, view: 'full', sort: { k: 'score', d: -1 } };
+function checksOf(r, P){
+  const peOk = r.pe != null && r.pe > 0 && r.pe <= P.peMax;
+  const dInd = peOk && r.im > 0 ? (1 - r.pe / r.im) * 100 : null;
+  const dHist = peOk && r.hpe > 0 ? (1 - r.pe / r.hpe) * 100 : null;
+  const T = r.adx != null && r.dir != null;
+  r._dInd = dInd; r._dHist = dHist; r._T = T;
+  return [
+    ['Ind', P.useInd, peOk && dInd != null && dInd >= P.indDisc],
+    ['Hist', P.useHist, peOk && (dHist != null ? dHist >= P.histDisc : !P.reqHist)],
+    ['Up', P.useUp, T ? (r.ef != null && r.c > r.ef && r.fr && (!P.reqStack || r.stk)) : null],
+    ['ST', P.useST, T ? (r.dir === 1 && r.flip != null && r.flip <= P.flipBars) : null],
+    ['ADX', P.useADX, T ? (r.adx >= P.adxMin && r.adxL != null && r.adx > r.adxL && r.adx >= (r.adx1 ?? 0) && (!P.reqDI || r.pdi > r.mdi)) : null],
+    ['Mom', P.useMom, T ? (r.rsi != null && r.rsi >= P.rsiMin && r.rsi <= P.rsiMax && r.roc >= P.rocMin) : null],
+    ['Vol', P.useVol, T && r.vr != null ? r.vr >= P.volMin : null],
+  ];
+}
+function scoreOf(r, P){
+  let s = 0;
+  if (r._dInd != null) s += Math.max(0, Math.min(r._dInd, 80)) / 80 * 20;
+  if (r._dHist != null) s += Math.max(0, Math.min(r._dHist, 80)) / 80 * 20;
+  if (r._T){
+    s += Math.min(r.adx || 0, 45) / 45 * 15;
+    s += Math.max(0, Math.min((r.adx || 0) - (r.adxL || 0), 10)) / 10 * 10;
+    if (r.dir === 1 && r.flip != null && r.flip <= P.flipBars) s += 15 * (1 - r.flip / (P.flipBars + 1));
+    s += Math.max(0, Math.min((r.rsi || 0) - 50, 20)) / 20 * 10;
+    s += Math.max(0, Math.min(r.roc || 0, 20)) / 20 * 10;
+  }
+  return Math.round(s);
+}
+function evaluate(){
+  if (!S.data) return;
+  const P = readP();
+  for (const r of S.data.stocks){
+    const ch = checksOf(r, P);
+    r._ch = ch;
+    const en = ch.filter(x => x[1]);
+    r._pass = en.filter(x => x[2] === true).length; r._en = en.length;
+    r._cap = r.mc == null || r.mc >= P.minMcap;
+    r._val = r._cap && (!P.useInd || ch[0][2]) && (!P.useHist || ch[1][2]) && r.pe > 0 && r.pe <= P.peMax;
+    r._full = r._T && r._cap && r._pass === r._en;
+    r._near = r._T && r._cap && !r._full && r._pass >= Math.min(P.nearMin, r._en);
+    r.score = scoreOf(r, P);
+  }
+  const st = S.data.stocks;
+  $('#sUni').textContent = st.length.toLocaleString('en-IN');
+  $('#sVal').textContent = st.filter(r => r._val).length;
+  $('#sFull').textContent = st.filter(r => r._full).length;
+  $('#sNear').textContent = st.filter(r => r._near).length;
+}
+
+/* ---------------- render ---------------- */
+const COLS = [
+  ['s', 'Symbol'], ['ind', 'Industry', 'hs'], ['score', 'Score'], ['pe', 'P/E'], ['im', 'Ind med', 'hs'], ['_dInd', 'Disc ind %'],
+  ['hpe', 'Hist P/E', 'hs'], ['_dHist', 'Disc hist %'], ['c', 'Close', 'hs'], ['flip', 'ST flip'], ['adx', 'ADX'], ['adxD', 'ADX Δ', 'hs'],
+  ['rsi', 'RSI'], ['roc', 'ROC %', 'hs'], ['slp', 'SL %', 'hs'], ['_pass', 'Checks'],
+];
+const val = (r, k) => k === 'adxD' ? (r.adx != null && r.adxL != null ? r.adx - r.adxL : null) : r[k];
+function rowsForView(){
+  if (!S.data) return [];
+  const P = readP(), q = $('#search').value.trim().toLowerCase();
+  let rows = S.data.stocks.filter(r => {
+    switch (S.view){
+      case 'full': return r._full;
+      case 'near': return r._near;
+      case 'value': return r._val;
+      case 'trend': return r._cap && r.dir === 1 && r.flip != null && r.flip <= P.flipBars;
+      default: return true;
+    }
+  });
+  if (q) rows = rows.filter(r => (r.s + ' ' + r.n + ' ' + r.ind + ' ' + r.sec).toLowerCase().includes(q));
+  const { k, d } = S.sort;
+  rows.sort((a, b) => { const x = val(a, k), y = val(b, k);
+    if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+    return typeof x === 'string' ? x.localeCompare(y) * d : (x - y) * d; });
+  return rows;
+}
+function render(){
+  const P = readP();
+  $('#thead').innerHTML = '<tr>' + COLS.map(([k, l, c]) => `<th data-k="${k}" class="${c || ''}">${l}${S.sort.k === k ? (S.sort.d > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('') + '</tr>';
+  const rows = rowsForView(), shown = rows.slice(0, 500);
+  const sc = s => `<span class="score" style="background:hsl(${Math.min(120, s * 1.3)} 60% 18%);color:hsl(${Math.min(120, s * 1.3)} 75% 65%)">${s}</span>`;
+  const pct = v => v == null ? '<span class="mut">—</span>' : `<span class="${v >= 0 ? 'pos' : 'neg'}">${v.toFixed(0)}</span>`;
+  $('#tbody').innerHTML = shown.map(r => {
+    const T = r._T, adxD = val(r, 'adxD');
+    const ch = (r._ch || []).map(([l, en, ok]) => `<i class="${!en ? 'n' : ok === true ? 'y' : ok == null ? 'n' : ''}" title="${l}">${l}</i>`).join('');
+    return `<tr data-s="${esc(r.s)}">
+      <td><b>${esc(r.s)}</b>${r.loss ? ' <span class="neg" title="Loss-making (negative EPS)">L</span>' : ''}</td>
+      <td class="mut hs">${esc((r.ind || '').slice(0, 26))}</td>
+      <td>${sc(r.score)}</td>
+      <td>${fx(r.pe, 1)}</td><td class="mut hs">${fx(r.im, 1)}</td><td>${pct(r._dInd)}</td>
+      <td class="mut hs">${fx(r.hpe, 1)}</td><td>${pct(r._dHist)}</td>
+      <td class="hs">${fx(r.c, 2)}</td>
+      <td>${T ? (r.dir === 1 ? (r.flip == null ? '<span class="mut">old</span>' : `<span class="${r.flip <= P.flipBars ? 'pos' : ''}">${r.flip}d</span>`) : '<span class="neg">bear</span>') : '—'}</td>
+      <td>${fx(r.adx, 1)}</td><td class="hs">${adxD == null ? '—' : `<span class="${adxD > 0 ? 'pos' : 'neg'}">${adxD.toFixed(1)}</span>`}</td>
+      <td>${fx(r.rsi, 0)}</td><td class="hs">${T ? pct(r.roc) : '—'}</td><td class="hs">${fx(r.slp, 1)}</td>
+      <td><span class="chk">${ch}</span></td></tr>`;
+  }).join('') || `<tr><td colspan="${COLS.length}" style="text-align:center;padding:24px" class="mut">${S.data ? 'No stocks match in this view — loosen the rules or check Near-miss.' : 'Waiting for the first scan…'}</td></tr>`;
+  if (rows.length > shown.length) $('#tbody').insertAdjacentHTML('beforeend', `<tr><td colspan="${COLS.length}" class="mut" style="text-align:center">+${rows.length - shown.length} more — search or export CSV</td></tr>`);
+}
+
+/* ---------------- data loading ---------------- */
+async function loadResults(silent){
+  try {
+    if (!silent) status('Loading latest scan…');
+    S.data = await getJSON('data/results.json', 60000);
+    S.charts = null;
+    showMeta(); evaluate(); render(); status('');
+  } catch (e){
+    status(location.protocol === 'file:' ? 'Open this page from GitHub Pages (or a local server) — browsers block reading data files from file://.'
+      : 'No scan results yet — tap “Run scan now”, or wait for the scheduled 4:15 PM IST run.', true);
+    $('#meta').textContent = 'No results published yet.';
+    render();
+  }
+}
+function showMeta(){
+  const m = S.data.meta || {}, g = m.generated ? new Date(m.generated) : null;
+  $('#meta').innerHTML = `Last scan <b>${g ? g.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' IST' : '—'}</b>
+    · prices as of ${esc(m.marketDate || '—')} · ${(m.universe || 0).toLocaleString('en-IN')} NSE stocks · ${m.withEps || 0} with EPS · ${m.withHistPE || 0} with historical P/E`;
+  const c = m.cfg || {};
+  $('#cfgLine').textContent = `Scan settings: EMA ${c.emaFast}/${c.emaSlow}, slope over ${c.slope} bars · Supertrend ${c.stP}, ${c.stM} · ADX ${c.adxP}, rising vs ${c.adxLook} bars ago · RSI ${c.rsiP} · ROC ${c.rocP}. Data: NSE stock list + Yahoo Finance prices and EPS. Historical P/E = average of yearly (avg price ÷ annual EPS) over available fiscal years.`;
+  S.lastGen = m.generated;
+}
+async function checkForNew(){
+  try { const m = await getJSON('data/meta.json', 15000); if (m.generated && m.generated !== S.lastGen) loadResults(true); } catch {}
+}
+
+/* ---------------- chart ---------------- */
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+async function openDetail(sym){
+  const r = S.data.stocks.find(x => x.s === sym); if (!r) return;
+  const P = readP();
+  $('#mTitle').textContent = `${r.s} · ${r.n || ''}`;
+  $('#mSub').textContent = `${r.ind || ''}${r.sec ? ' · ' + r.sec : ''}${r.date ? ' · last bar ' + r.date : ''}`;
+  const adxD = val(r, 'adxD');
+  const kv = [['Score', r.score], ['Close', fx(r.c)], ['Day change', r.chg == null ? '—' : fx(r.chg, 2) + '%'], ['P/E (TTM)', fx(r.pe, 2)], ['TTM EPS', fx(r.eps, 2)],
+    [`${r.imSrc === 'sector' ? 'Sector' : 'Industry'} median${r.imN ? ' (' + r.imN + ')' : ''}`, fx(r.im, 2)], ['Hist avg P/E' + (r.hpeN ? ` (${r.hpeN}y)` : ''), fx(r.hpe, 2)],
+    ['Disc vs industry', r._dInd == null ? '—' : r._dInd.toFixed(1) + '%'], ['Disc vs hist', r._dHist == null ? '—' : r._dHist.toFixed(1) + '%'],
+    ['Mcap ₹Cr', r.mc == null ? '—' : r.mc.toLocaleString('en-IN')]];
+  if (r._T) kv.push(['Supertrend (SL)', `${fx(r.sl)} · ${fx(r.slp, 1)}%`], ['ST flip', r.dir === 1 ? (r.flip == null ? 'bull (old)' : r.flip + ' bars ago') : 'bearish'],
+    ['ADX', `${fx(r.adx, 1)} (${adxD > 0 ? '+' : ''}${fx(adxD, 1)})`], ['+DI / −DI', `${fx(r.pdi, 1)} / ${fx(r.mdi, 1)}`], ['RSI', fx(r.rsi, 1)], ['ROC', fx(r.roc, 1) + '%'], ['Volume vs 20d', r.vr == null ? '—' : fx(r.vr, 2) + '×']);
+  $('#mKv').innerHTML = kv.map(([k, v]) => `<div>${k}<b>${v}</b></div>`).join('');
+  const s = encodeURIComponent(r.s);
+  $('#mLinks').innerHTML = `<a href="https://www.screener.in/company/${s}/" target="_blank" rel="noopener">Screener.in ↗</a><a href="https://in.tradingview.com/chart/?symbol=NSE:${s}" target="_blank" rel="noopener">TradingView ↗</a>`;
+  $('#modal').classList.add('on');
+  if (!S.charts){ try { S.charts = await getJSON('data/charts.json', 60000); } catch { S.charts = {}; } }
+  requestAnimationFrame(() => drawChart(S.charts[r.s], P));
+}
+function drawChart(ch, P){
+  const cv = $('#chart'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
+  if (!ch || !ch.c || ch.c.length < 2){ g.fillStyle = css('--mute'); g.font = '13px system-ui'; g.fillText('Chart not stored for this stock (only the top ~300 setups are).', 14, 30); return; }
+  const N = ch.c.length, pad = { l: 8, r: 56, t: 10 };
+  const pH = H * 0.66, aTop = pH + 18, aH = H - aTop - 8, x = i => pad.l + i / (N - 1) * (W - pad.l - pad.r);
+  const vals = []; for (let i = 0; i < N; i++) [ch.h[i], ch.l[i], ch.f[i], ch.w[i], ch.st[i]].forEach(v => v != null && vals.push(v));
+  let lo = Math.min(...vals), hi = Math.max(...vals); const m = (hi - lo) * 0.05 || 1; lo -= m; hi += m;
+  const y = v => pad.t + (hi - v) / (hi - lo) * (pH - pad.t);
+  g.strokeStyle = css('--line'); g.lineWidth = 1; g.fillStyle = css('--mute'); g.font = '11px ui-monospace,monospace';
+  for (let k = 0; k <= 4; k++){ const v = lo + (hi - lo) * k / 4, yy = y(v); g.beginPath(); g.moveTo(pad.l, yy); g.lineTo(W - pad.r, yy); g.stroke(); g.fillText(v.toFixed(v > 1000 ? 0 : 1), W - pad.r + 4, yy + 4); }
+  const bw = Math.max(1, (W - pad.l - pad.r) / N * 0.6);
+  for (let i = 0; i < N; i++){ const col = ch.c[i] >= ch.o[i] ? css('--green') : css('--red');
+    g.strokeStyle = col; g.fillStyle = col; g.globalAlpha = .55;
+    g.beginPath(); g.moveTo(x(i), y(ch.h[i])); g.lineTo(x(i), y(ch.l[i])); g.stroke();
+    g.fillRect(x(i) - bw / 2, y(Math.max(ch.o[i], ch.c[i])), bw, Math.max(1, Math.abs(y(ch.o[i]) - y(ch.c[i])))); }
+  g.globalAlpha = 1;
+  const line = (arr, col, w, yf) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); let on = false;
+    for (let i = 0; i < N; i++){ const v = arr[i]; if (v == null){ on = false; continue; } on ? g.lineTo(x(i), yf(v)) : g.moveTo(x(i), yf(v)); on = true; } g.stroke(); };
+  line(ch.f, css('--amber'), 1.5, y); line(ch.w, css('--blue'), 1.5, y);
+  g.lineWidth = 2;
+  for (let i = 1; i < N; i++){ if (ch.st[i] == null || ch.st[i - 1] == null || ch.d[i] !== ch.d[i - 1]) continue;
+    g.strokeStyle = ch.d[i] === 1 ? css('--green') : css('--red'); g.beginPath(); g.moveTo(x(i - 1), y(ch.st[i - 1])); g.lineTo(x(i), y(ch.st[i])); g.stroke(); }
+  for (let i = 1; i < N; i++) if (ch.d[i] === 1 && ch.d[i - 1] === -1){
+    g.fillStyle = css('--green'); const xx = x(i), yy = Math.min(y(ch.l[i]) + 12, pH - 4); g.beginPath(); g.moveTo(xx, yy - 7); g.lineTo(xx - 5, yy + 2); g.lineTo(xx + 5, yy + 2); g.fill(); }
+  g.fillStyle = css('--mute'); g.fillText(ch.t[0], pad.l + 2, pH + 12); const lt = ch.t[N - 1]; g.fillText(lt, W - pad.r - g.measureText(lt).width, pH + 12);
+  const av = []; for (let i = 0; i < N; i++) [ch.a[i], ch.p[i], ch.m[i]].forEach(v => v != null && av.push(v));
+  const aHi = Math.max(40, ...av), ay = v => aTop + (aHi - v) / aHi * aH;
+  g.strokeStyle = css('--line'); g.setLineDash([4, 4]); g.beginPath(); g.moveTo(pad.l, ay(P.adxMin)); g.lineTo(W - pad.r, ay(P.adxMin)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = css('--mute'); g.fillText('ADX ' + P.adxMin, W - pad.r + 4, ay(P.adxMin) + 4);
+  g.globalAlpha = .6; line(ch.p, css('--green'), 1, ay); line(ch.m, css('--red'), 1, ay); g.globalAlpha = 1; line(ch.a, css('--violet'), 2, ay);
+}
+
+/* ---------------- export ---------------- */
+function exportCSV(){
+  const rows = rowsForView();
+  const h = ['Symbol', 'Name', 'Industry', 'Sector', 'Score', 'PE', 'IndustryMedianPE', 'DiscVsIndustry%', 'HistPE', 'DiscVsHist%', 'Close', 'STFlipBarsAgo', 'ADX', 'ADXChange', 'RSI', 'ROC%', 'SupertrendSL', 'SL%', 'VolRatio', 'McapCr', 'ChecksPassed'];
+  const q = v => v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : v;
+  const r1 = v => v == null ? null : Math.round(v * 10) / 10;
+  const lines = [h.join(',')].concat(rows.map(r => [r.s, r.n, r.ind, r.sec, r.score, r.pe, r.im, r1(r._dInd), r.hpe, r1(r._dHist), r.c, r.flip, r.adx, r1(val(r, 'adxD')), r.rsi, r.roc, r.sl, r.slp, r.vr, r.mc, `${r._pass}/${r._en}`].map(q).join(',')));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+  a.download = `value-momentum-${S.view}-${(S.data && S.data.meta.marketDate) || 'scan'}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------------- GitHub: run scan now ---------------- */
+function ghCfg(){
+  const s = LS.get('vmd_gh', {});
+  let owner = s.owner, repo = s.repo;
+  if ((!owner || !repo) && location.hostname.endsWith('.github.io')){
+    owner = owner || location.hostname.split('.')[0];
+    const seg = location.pathname.split('/').filter(Boolean)[0];
+    repo = repo || (seg && !seg.includes('.') ? seg : location.hostname);
+  }
+  return { owner, repo, branch: s.branch || 'main', wf: s.wf || 'scan.yml', pat: s.pat || '' };
+}
+async function gh(path, opt = {}){
+  const g = ghCfg(), ac = new AbortController(), to = setTimeout(() => ac.abort(), 20000);
+  const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  if (g.pat) headers.Authorization = 'Bearer ' + g.pat;
+  try { return await fetch('https://api.github.com' + path, { ...opt, headers: { ...headers, ...(opt.headers || {}) }, signal: ac.signal }); }
+  finally { clearTimeout(to); }
+}
+async function lastRun(){
+  const g = ghCfg(); if (!g.owner || !g.repo) return null;
+  try { const r = await gh(`/repos/${g.owner}/${g.repo}/actions/workflows/${g.wf}/runs?per_page=1`); if (!r.ok) return null;
+    const j = await r.json(); return (j.workflow_runs || [])[0] || null; } catch { return null; }
+}
+let pollTimer = null, seenRunId = null;
+function setRunPill(run){
+  const p = $('#runPill');
+  if (!run){ p.textContent = 'scan: —'; p.className = 'pill'; return; }
+  const mins = Math.max(0, Math.round((Date.now() - new Date(run.run_started_at || run.created_at)) / 60000));
+  if (run.status !== 'completed'){ p.textContent = `scanning… ${mins}m`; p.className = 'pill run'; $('#runBtn').disabled = true; }
+  else { p.textContent = run.conclusion === 'success' ? 'last run ✓' : `last run: ${run.conclusion}`; p.className = 'pill ' + (run.conclusion === 'success' ? 'ok' : 'bad'); $('#runBtn').disabled = false; }
+  p.title = run.html_url || '';
+}
+async function poll(){
+  const run = await lastRun(); setRunPill(run);
+  if (run && run.status !== 'completed'){ seenRunId = run.id; clearTimeout(pollTimer); pollTimer = setTimeout(poll, 20000); return; }
+  if (run && run.id === seenRunId && run.conclusion === 'success'){ seenRunId = null; status('Scan finished — loading new results…'); setTimeout(() => loadResults(), 25000); }
+  else if (run && run.id === seenRunId){ seenRunId = null; status(`Scan ${run.conclusion} — open the run log from the status pill.`, true); }
+}
+async function runNow(){
+  const g = ghCfg();
+  if (!g.pat || !g.owner || !g.repo){ openGh(); return; }
+  $('#runBtn').disabled = true; status('Starting scan…');
+  try {
+    const r = await gh(`/repos/${g.owner}/${g.repo}/actions/workflows/${g.wf}/dispatches`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: g.branch }) });
+    if (r.status !== 204){ const t = await r.text(); throw new Error(`GitHub ${r.status}: ${t.slice(0, 160)}`); }
+    status('Scan started on GitHub — takes roughly 15–45 minutes. You can close this page; results appear automatically.');
+    setTimeout(poll, 6000);
+  } catch (e){ $('#runBtn').disabled = false; status('Could not start scan: ' + e.message, true); }
+}
+function openGh(){
+  const g = ghCfg();
+  $('#ghOwner').value = g.owner || ''; $('#ghRepo').value = g.repo || ''; $('#ghBranch').value = g.branch; $('#ghWf').value = g.wf; $('#ghPat').value = g.pat;
+  $('#ghModal').classList.add('on');
+}
+
+/* ---------------- init ---------------- */
+function init(){
+  buildRules(); render();
+  $('#search').oninput = render;
+  $('#reload').onclick = () => loadResults();
+  $('#exportBtn').onclick = exportCSV;
+  $('#runBtn').onclick = runNow;
+  $('#ghBtn').onclick = openGh;
+  $('#ghSave').onclick = () => {
+    LS.set('vmd_gh', { owner: $('#ghOwner').value.trim(), repo: $('#ghRepo').value.trim(), branch: $('#ghBranch').value.trim() || 'main', wf: $('#ghWf').value.trim() || 'scan.yml', pat: $('#ghPat').value.trim() });
+    $('#ghModal').classList.remove('on'); poll();
+  };
+  $('#tabs').onclick = e => { const v = e.target.dataset.v; if (!v) return; S.view = v; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.v === v)); render(); };
+  $('#thead').onclick = e => { const k = e.target.closest('th')?.dataset.k; if (!k) return; S.sort = { k, d: S.sort.k === k ? -S.sort.d : (['s', 'ind', 'flip', 'pe', 'slp'].includes(k) ? 1 : -1) }; render(); };
+  $('#tbody').onclick = e => { const s = e.target.closest('tr')?.dataset.s; if (s) openDetail(s); };
+  document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m || e.target.hasAttribute('data-close')) m.classList.remove('on'); }));
+  loadResults(); poll();
+  setInterval(() => { if (document.visibilityState === 'visible') checkForNew(); }, 10 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ checkForNew(); poll(); } });
+}
+init();
+</script>
+</body>
+</html>
